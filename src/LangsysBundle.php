@@ -90,13 +90,9 @@ class LangsysBundle extends AbstractBundle
             ]);
         $services->alias(Client::class, 'langsys.client');
 
-        $services->set('langsys.interpolator', Interpolator::class);
-        $services->alias(Interpolator::class, 'langsys.interpolator');
-
         $services->set('langsys.translator', LangsysTranslator::class)
             ->args([
                 service('langsys.client'),
-                service('langsys.interpolator'),
                 service('request_stack'),
                 service('logger')->nullOnInvalid(),
             ])

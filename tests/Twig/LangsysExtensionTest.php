@@ -3,7 +3,7 @@
 namespace Langsys\Symfony\Tests\Twig;
 
 use Langsys\SDK\Client;
-use Langsys\Symfony\Interpolator;
+use Langsys\SDK\Format\Interpolator;
 use Langsys\Symfony\LangsysTranslator;
 use Langsys\Symfony\Twig\LangsysExtension;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
@@ -21,8 +21,16 @@ class LangsysExtensionTest extends PhpUnitTestCase
 {
     private function render(string $template, string $translation, array $context = []): string
     {
+        // Stand in for the real client: return the canned translation with the
+        // params it was handed resolved, which is what langsys/langsys-php
+        // does inside translate(). These tests are about the Twig seam --
+        // params arriving from a hash or the template context, and output
+        // being escaped -- not about interpolation itself.
         $client = $this->createMock(Client::class);
-        $client->method('translate')->willReturn($translation);
+        $client->method('translate')->willReturnCallback(
+            fn (string $phrase, ?string $locale = null, string $category = '__uncategorized__', $blockId = null, array $params = [])
+                => (new Interpolator())->interpolate($translation, $params, $locale ?? 'en')
+        );
 
         $stack = new RequestStack();
         $request = Request::create('/');
@@ -31,7 +39,7 @@ class LangsysExtensionTest extends PhpUnitTestCase
 
         $twig = new Environment(new ArrayLoader(['page' => $template]));
         $twig->addExtension(new LangsysExtension(
-            new LangsysTranslator($client, new Interpolator(), $stack)
+            new LangsysTranslator($client, $stack)
         ));
 
         return $twig->render('page', $context);
@@ -116,7 +124,7 @@ class LangsysExtensionTest extends PhpUnitTestCase
 
         $twig = new Environment(new ArrayLoader(['page' => "{{ t('Welcome') }}"]));
         $twig->addExtension(new LangsysExtension(
-            new LangsysTranslator($client, new Interpolator(), $stack)
+            new LangsysTranslator($client, $stack)
         ));
 
         $this->assertSame('Welcome', $twig->render('page'));

@@ -6,7 +6,6 @@ use Langsys\SDK\Client;
 use Langsys\Symfony\Cache\Psr6CacheAdapter;
 use Langsys\Symfony\EventSubscriber\FlushPendingRegistrationsSubscriber;
 use Langsys\Symfony\EventSubscriber\LocaleSubscriber;
-use Langsys\Symfony\Interpolator;
 use Langsys\Symfony\LangsysBundle;
 use Langsys\Symfony\LangsysTranslator;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
@@ -45,8 +44,11 @@ class LangsysBundleTest extends PhpUnitTestCase
 
         $this->assertTrue($builder->hasDefinition('langsys.client'));
         $this->assertTrue($builder->hasDefinition('langsys.translator'));
-        $this->assertTrue($builder->hasDefinition('langsys.interpolator'));
         $this->assertTrue($builder->hasDefinition('langsys.cache_adapter'));
+
+        // Interpolation is the base SDK's job — the bundle must NOT register
+        // one of its own, or a second copy starts drifting from upstream's.
+        $this->assertFalse($builder->hasDefinition('langsys.interpolator'));
     }
 
     public function testRegistersAutowiringAliases(): void
@@ -55,7 +57,6 @@ class LangsysBundleTest extends PhpUnitTestCase
 
         $this->assertTrue($builder->hasAlias(Client::class));
         $this->assertTrue($builder->hasAlias(LangsysTranslator::class));
-        $this->assertTrue($builder->hasAlias(Interpolator::class));
     }
 
     public function testTheClientIsShared(): void

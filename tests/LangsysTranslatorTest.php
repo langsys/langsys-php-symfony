@@ -4,7 +4,7 @@ namespace Langsys\Symfony\Tests;
 
 use Langsys\SDK\Client;
 use Langsys\SDK\Exception\LangsysException;
-use Langsys\Symfony\Interpolator;
+use Langsys\SDK\Format\Interpolator;
 use Langsys\Symfony\LangsysTranslator;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 use Psr\Log\LoggerInterface;
@@ -34,7 +34,7 @@ class LangsysTranslatorTest extends PhpUnitTestCase
 
     private function translator(Client $client, ?RequestStack $stack = null, ?LoggerInterface $logger = null): LangsysTranslator
     {
-        return new LangsysTranslator($client, new Interpolator(), $stack ?? $this->stack('en'), $logger);
+        return new LangsysTranslator($client, $stack ?? $this->stack('en'), $logger);
     }
 
     public function testReturnsTheTranslationFromTheClient(): void
@@ -151,10 +151,17 @@ class LangsysTranslatorTest extends PhpUnitTestCase
         $this->translator($client)->translate('Save');
     }
 
-    public function testInterpolatesParamsIntoTheTranslation(): void
+    public function testHandsParamsToTheClientRatherThanInterpolatingThem(): void
     {
+        // Interpolation belongs to langsys/langsys-php, which resolves
+        // placeholders and ICU inside translate(). The bundle's only job is to
+        // pass the params down — asserting the resolved string here would be
+        // testing the base SDK through a mock of itself.
         $client = $this->createMock(Client::class);
-        $client->method('translate')->willReturn('Hola, {name}!');
+        $client->expects($this->once())
+            ->method('translate')
+            ->with('Hello, {name}!', 'en', '__uncategorized__', null, ['name' => 'Sarah'])
+            ->willReturn('Hola, Sarah!');
 
         $this->assertSame('Hola, Sarah!', $this->translator($client)->translate('Hello, {name}!', null, ['name' => 'Sarah']));
     }
@@ -166,6 +173,9 @@ class LangsysTranslatorTest extends PhpUnitTestCase
         // but complete sentence.
         $client = $this->createMock(Client::class);
         $client->method('translate')->willThrowException(new LangsysException('offline'));
+        // The degraded path borrows the client's own interpolator, so the
+        // fallback resolves placeholders exactly as the happy path would.
+        $client->method('getInterpolator')->willReturn(new Interpolator());
 
         $this->assertSame(
             'Hello, Sarah!',

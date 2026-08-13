@@ -1,8 +1,8 @@
 {
-    "name": "langsys/symfony-sdk",
-    "description": "Symfony integration for the Langsys translation SDK — bundle, t() Twig function, locale-detection subscriber, and PSR-6 catalog caching over langsys/php-sdk.",
+    "name": "langsys/langsys-php-symfony",
+    "description": "Symfony integration for the Langsys translation SDK — bundle, t() Twig function, locale-detection subscriber, and PSR-6 catalog caching over langsys/langsys-php.",
     "keywords": ["i18n", "l10n", "symfony", "twig", "localization", "internationalization", "translation", "langsys", "sdk"],
-    "homepage": "https://github.com/langsys/langsys-symfony",
+    "homepage": "https://github.com/langsys/langsys-php-symfony",
     "license": "MIT",
     "authors": [
         {
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.1",
-        "langsys/php-sdk": "dev-main",
+        "langsys/langsys-php": "^1.0",
         "psr/cache": "^2.0 || ^3.0",
         "psr/log": "^2.0 || ^3.0",
         "symfony/config": "^6.4 || ^7.0",
@@ -26,16 +26,9 @@
         "twig/twig": "^3.8"
     },
     "suggest": {
-        "ext-intl": "Locale-aware ICU pluralization and number/date formatting in interpolated phrases",
-        "twig/twig": "The t() Twig function and |t filter",
+                "twig/twig": "The t() Twig function and |t filter",
         "symfony/twig-bundle": "Auto-registers the Twig extension"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/langsys/langsys-php"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Langsys\\Symfony\\": "src/"
@@ -49,8 +42,6 @@
     "scripts": {
         "test": "phpunit"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "sort-packages": true
     }
